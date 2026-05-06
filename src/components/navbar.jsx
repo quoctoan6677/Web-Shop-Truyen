@@ -7,7 +7,7 @@ function Navbar({ activeItem, onSelect }) {
 				<button
 					key={item}
 					type="button"
-					className={`rounded-full border px-2 py-1 text-xs transition ${
+					className={`rounded-full border px-2 py-1 text-xs cursor-pointer transition ${
 						activeItem === item
 							? 'border-blue-600 bg-blue-600 text-white'
 							: 'border-slate-300 bg-slate-50 text-slate-900 hover:bg-slate-100'
