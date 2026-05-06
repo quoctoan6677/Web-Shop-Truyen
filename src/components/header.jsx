@@ -12,7 +12,7 @@ function Header() {
 			<button
 				type="button"
 				onClick={() => navigate('/')}
-				className="flex items-center gap-2 self-center justify-self-start text-2xl font-bold text-slate-900"
+				className="flex items-center gap-2 self-center justify-self-start text-2xl font-bold text-slate-900 cursor-pointer"
 				aria-label="Ve trang chu"
 			>
 				<FiBookOpen className="h-6 w-6 text-blue-600" aria-hidden="true" />
@@ -33,12 +33,12 @@ function Header() {
 							className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
 							aria-label="Tìm kiếm"
 						>
-							<FiSearch className="h-4 w-4" aria-hidden="true" />
+							<FiSearch className="h-4 w-4 cursor-pointer" aria-hidden="true" />
 						</button>
 					</div>
 			        <button
 				        type="button"
-        				className="ml-4 flex h-11 w-11 self-start items-center justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:bg-slate-50 max-md:mr-0 max-md:justify-self-end max-md:[grid-area:cart]"
+        				className="ml-4 flex h-11 w-11 self-start items-center cursor-pointer justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:bg-slate-50 max-md:mr-0 max-md:justify-self-end max-md:[grid-area:cart]"
 				        onClick={() => navigate('/cart')}
 				        aria-label="Giỏ hàng"
 			        >
@@ -51,7 +51,7 @@ function Header() {
 
 			<button
 				type="button"
-				className="h-11 w-11 self-center justify-self-end rounded-full border border-slate-300 bg-slate-900 font-semibold text-white transition hover:bg-slate-700"
+				className="h-11 w-11 self-center justify-self-end cursor-pointer rounded-full border border-slate-300 bg-slate-900 font-semibold text-white transition hover:bg-slate-700"
 				onClick={() => navigate('/profile')}
 				aria-label="Hồ sơ"
 			>
