@@ -38,7 +38,7 @@ function CartCard({ item, onRemove }) {
 			</div>
 
 			{/* số lượng */}
-			<div className="flex justify-center items-center border border-slate-300 rounded w-fit mx-auto">
+			<div className="flex justify-center items-center border border-slate-300 rounded-lg w-fit mx-auto">
 				<button
 					onClick={decrease}
 					className="px-3 py-1 hover:bg-gray-100 cursor-pointer"

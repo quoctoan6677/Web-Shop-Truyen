@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ProductCard from "../components/ProductCard";
+import ModalChiTietSanPham from "../modals/ModalChiTietSanPham";
 
 const products = [
 	{
@@ -7,20 +8,22 @@ const products = [
 		name: "Doraemon tập 1",
 		price: 24000,
 		image:
-			"https://product.hstatic.net/1000376556/product/xhljijuw_9de22abba6a2407d87e202d773acda07_1024x1024.png",
+			"https://cdn2.fptshop.com.vn/unsafe/Uploads/images/tin-tuc/157765/Originals/15(1).jpg",
 	},
 	...Array.from({ length: 15 }, (_, i) => ({
 		id: i + 2,
-		name: "Quần jean 1 " + (i + 1),
+		name: "Quần jean 11233333322222222222222222222222222 " + (i + 1),
 		price: 350000,
 		image:
-			"https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
+			"https://i.pinimg.com/736x/b7/86/ff/b786ffa545f7c01196c5ba83aa092e8f.jpg",
 	})),
 ];
 
 function Home() {
 	const [cart, setCart] = useState([]);
 	const [currentPage, setCurrentPage] = useState(1);
+	const [selectedProduct, setSelectedProduct] = useState(null);
+	const [openModal, setOpenModal] = useState(false); 
 
 	const itemsPerPage = 10;
 
@@ -39,6 +42,11 @@ function Home() {
 
 	const handleViewDetail = (product) => {
 		console.log("View:", product);
+		setSelectedProduct(product);
+		setOpenModal(true);
+	};
+	const handleCloseModal = () => {
+		setOpenModal(false);
 	};
 
 	// Chuyển trang + scroll lên đầu
@@ -69,7 +77,7 @@ function Home() {
 					disabled={currentPage === 1}
 					className="px-3 py-1 border rounded cursor-pointer disabled:opacity-30 hover:bg-gray-100"
 				>
-					Prev
+					Trước
 				</button>
 
 				{/* Page numbers */}
@@ -93,9 +101,15 @@ function Home() {
 					disabled={currentPage === totalPages}
 					className="px-3 py-1 border rounded cursor-pointer disabled:opacity-30 hover:bg-gray-100"
 				>
-					Next
+					Sau
 				</button>
 			</div>
+			<ModalChiTietSanPham
+				product={selectedProduct}
+				open={openModal}
+				onClose={handleCloseModal}
+				onAddToCart={handleAddToCart}
+			/>
 		</section>
 	);
 }

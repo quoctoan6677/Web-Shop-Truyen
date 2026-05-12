@@ -11,7 +11,10 @@ function Header() {
 		<header className="grid w-full grid-cols-[1fr_minmax(0,44rem)_1fr] items-start gap-3 border-b border-slate-200 bg-white px-2 py-3 md:px-8 max-md:grid-cols-1">
 			<button
 				type="button"
-				onClick={() => navigate('/')}
+				
+				onClick={() => {
+					setActiveItem('Tất cả')
+					navigate('/')}}
 				className="flex items-center gap-2 self-center justify-self-start text-2xl font-bold text-slate-900 cursor-pointer"
 				aria-label="Ve trang chu"
 			>
