@@ -2,7 +2,7 @@ const MENU_ITEMS = ['Tất cả', 'Truyện chữ', 'Truyện tranh', 'Combo']
 
 function Navbar({ activeItem, onSelect }) {
 	return (
-		<nav className="flex flex-wrap justify-center gap-3" aria-label="Danh muc truyen">
+		<nav className="flex flex-wrap justify-center gap-2" aria-label="Danh muc truyen">
 			{MENU_ITEMS.map((item) => (
 				<button
 					key={item}
