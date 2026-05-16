@@ -58,10 +58,9 @@ function Login() {
 		<section className="flex min-h-screen items-center justify-center px-4 py-10">
 			<div className="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
 				<div className="mx-auto w-full max-w-md">
-					<p className="text-sm font-medium text-blue-600">Đăng nhập hệ thống</p>
 					<h1 className="mt-2 text-4xl font-bold text-slate-900">Đăng nhập</h1>
 					<p className="mt-3 text-sm leading-6 text-slate-500">
-						Nhập thông tin tài khoản để truy cập trang web.
+						Chào mừng bạn đến với ShopTruyen.
 					</p>
 
 					<div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -124,13 +123,6 @@ function Login() {
 								/>
 								<span>Ghi nhớ đăng nhập</span>
 							</label>
-
-							<button
-								type="button"
-								className="font-medium text-blue-600 transition hover:text-blue-700 cursor-pointer"
-							>
-								Quên mật khẩu?
-							</button>
 						</div>
 
 						{errorMessage && (
