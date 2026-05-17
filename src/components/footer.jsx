@@ -7,7 +7,7 @@ function Footer() {
 				<section>
 					<div className="flex items-center gap-2 text-lg font-bold text-slate-900">
 						<FiBookOpen className="h-5 w-5 text-blue-600" aria-hidden="true" />
-						<span>Shop Truyen</span>
+						<span>ShopTruyen</span>
 					</div>
 					<p className="mt-3 text-sm leading-6 text-slate-600">
 						Nơi mua sắm truyện chữ, truyện tranh và combo ưu đãi.

@@ -11,18 +11,23 @@ const emptyForm = {
 	image: "",
 };
 
-function SelectField({ label, value, onChange, options }) {
+function SelectField({ label, name, value, onChange, options }) {
 	const [isFocused, setIsFocused] = useState(false);
 
 	return (
 		<div className="grid gap-2">
-			<label className="text-sm font-semibold text-slate-700">{label}</label>
+			<label className="text-sm font-semibold text-slate-700" htmlFor={name}>
+				{label}
+			</label>
 			<div
 				className={`relative transition duration-200 ${
 					isFocused ? "-translate-y-0.5" : "translate-y-0"
 				}`}
 			>
 				<select
+					id={name}
+					name={name}
+					autoComplete="off"
 					value={value}
 					onChange={onChange}
 					onFocus={() => setIsFocused(true)}
@@ -54,7 +59,7 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 		}
 
 		setFormData({
-			id: product.id,
+			id: product.code,
 			name: product.name,
 			category: product.category,
 			price: product.price,
@@ -75,10 +80,10 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 		}));
 	};
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault();
 
-		onSave({
+		await onSave({
 			...product,
 			...formData,
 			price: Number(formData.price) || 0,
@@ -92,30 +97,36 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 				<button
 					type="button"
 					onClick={onClose}
-					className="absolute right-4 top-4 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 cursor-pointer"
+					className="absolute right-4 top-4 rounded-full p-2 text-slate-500 transition hover:bg-slate-100"
 					aria-label="Đóng popup cập nhật sản phẩm"
 				>
 					<FiX className="h-5 w-5" />
 				</button>
 
 				<div className="mb-6">
-					{/* <p className="text-sm font-medium text-blue-600">Quản lý sản phẩm</p> */}
 					<h2 className="mt-1 text-2xl font-bold text-slate-900">
 						Cập nhật sản phẩm
 					</h2>
-					{/* <p className="mt-2 text-sm text-slate-500">
-						Chỉnh sửa thông tin hiển thị, tồn kho và trạng thái của sản phẩm.
-					</p> */}
 				</div>
 
-				<form onSubmit={handleSubmit} className="grid gap-6">
+				<form
+					onSubmit={handleSubmit}
+					autoComplete="off"
+					className="grid gap-6"
+				>
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="grid gap-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="product-code"
+							>
 								Mã sản phẩm
 							</label>
 							<input
+								id="product-code"
+								name="productCode"
 								type="text"
+								autoComplete="off"
 								value={formData.id}
 								readOnly
 								className="h-11 rounded-xl border border-slate-300 bg-slate-50 px-4 text-slate-500 outline-none"
@@ -123,11 +134,18 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 						</div>
 
 						<div className="grid gap-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="product-name"
+							>
 								Tên sản phẩm
 							</label>
 							<input
+								id="product-name"
+								name="productName"
 								type="text"
+								autoComplete="off"
+								spellCheck={false}
 								value={formData.name}
 								onChange={(e) => handleChange("name", e.target.value)}
 								className="h-11 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -136,6 +154,7 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 
 						<SelectField
 							label="Thể loại"
+							name="productCategory"
 							value={formData.category}
 							onChange={(e) => handleChange("category", e.target.value)}
 							options={[
@@ -146,12 +165,19 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 						/>
 
 						<div className="grid gap-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="product-price"
+							>
 								Đơn giá
 							</label>
 							<input
+								id="product-price"
+								name="productPrice"
 								type="number"
 								min="0"
+								inputMode="numeric"
+								autoComplete="off"
 								value={formData.price}
 								onChange={(e) => handleChange("price", e.target.value)}
 								className="h-11 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -159,12 +185,19 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 						</div>
 
 						<div className="grid gap-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="product-stock"
+							>
 								Tồn kho
 							</label>
 							<input
+								id="product-stock"
+								name="productStock"
 								type="number"
 								min="0"
+								inputMode="numeric"
+								autoComplete="off"
 								value={formData.stock}
 								onChange={(e) => handleChange("stock", e.target.value)}
 								className="h-11 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -172,11 +205,18 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 						</div>
 
 						<div className="grid gap-2 md:col-span-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="product-image"
+							>
 								Ảnh sản phẩm
 							</label>
 							<input
-								type="text"
+								id="product-image"
+								name="productImageUrl"
+								type="url"
+								autoComplete="off"
+								spellCheck={false}
 								value={formData.image}
 								onChange={(e) => handleChange("image", e.target.value)}
 								placeholder="Dán URL ảnh sản phẩm"
@@ -185,11 +225,18 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 						</div>
 
 						<div className="grid gap-2 md:col-span-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="product-description"
+							>
 								Mô tả ngắn
 							</label>
 							<textarea
+								id="product-description"
+								name="productDescription"
 								rows="4"
+								autoComplete="off"
+								spellCheck={false}
 								value={formData.description}
 								onChange={(e) => handleChange("description", e.target.value)}
 								className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -201,13 +248,13 @@ function ModalCapNhatSanPham({ open, product, onClose, onSave }) {
 						<button
 							type="button"
 							onClick={onClose}
-							className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 cursor-pointer"
+							className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
 						>
 							Hủy
 						</button>
 						<button
 							type="submit"
-							className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 cursor-pointer"
+							className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
 						>
 							Lưu thay đổi
 						</button>

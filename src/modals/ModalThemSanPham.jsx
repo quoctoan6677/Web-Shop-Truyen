@@ -10,18 +10,23 @@ const emptyForm = {
 	image: "",
 };
 
-function SelectField({ label, value, onChange, options }) {
+function SelectField({ label, name, value, onChange, options }) {
 	const [isFocused, setIsFocused] = useState(false);
 
 	return (
 		<div className="grid gap-2">
-			<label className="text-sm font-semibold text-slate-700">{label}</label>
+			<label className="text-sm font-semibold text-slate-700" htmlFor={name}>
+				{label}
+			</label>
 			<div
 				className={`relative transition duration-200 ${
 					isFocused ? "-translate-y-0.5" : "translate-y-0"
 				}`}
 			>
 				<select
+					id={name}
+					name={name}
+					autoComplete="off"
 					value={value}
 					onChange={onChange}
 					onFocus={() => setIsFocused(true)}
@@ -58,16 +63,18 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 		}));
 	};
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault();
 
-		onSave({
+		const isSaved = await onSave({
 			...formData,
 			price: Number(formData.price) || 0,
 			stock: Number(formData.stock) || 0,
 		});
 
-		setFormData(emptyForm);
+		if (isSaved) {
+			setFormData(emptyForm);
+		}
 	};
 
 	const handleClose = () => {
@@ -81,7 +88,7 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 				<button
 					type="button"
 					onClick={handleClose}
-					className="absolute right-4 top-4 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 cursor-pointer"
+					className="absolute right-4 top-4 rounded-full p-2 text-slate-500 transition hover:bg-slate-100"
 					aria-label="Đóng popup thêm sản phẩm"
 				>
 					<FiX className="h-5 w-5" />
@@ -93,14 +100,25 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 					</h2>
 				</div>
 
-				<form onSubmit={handleSubmit} className="grid gap-6">
+				<form
+					onSubmit={handleSubmit}
+					autoComplete="off"
+					className="grid gap-6"
+				>
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="grid gap-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="new-product-name"
+							>
 								Tên sản phẩm
 							</label>
 							<input
+								id="new-product-name"
+								name="newProductName"
 								type="text"
+								autoComplete="off"
+								spellCheck={false}
 								value={formData.name}
 								onChange={(e) => handleChange("name", e.target.value)}
 								className="h-11 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -109,6 +127,7 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 
 						<SelectField
 							label="Thể loại"
+							name="newProductCategory"
 							value={formData.category}
 							onChange={(e) => handleChange("category", e.target.value)}
 							options={[
@@ -119,12 +138,19 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 						/>
 
 						<div className="grid gap-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="new-product-stock"
+							>
 								Tồn kho
 							</label>
 							<input
+								id="new-product-stock"
+								name="newProductStock"
 								type="number"
 								min="0"
+								inputMode="numeric"
+								autoComplete="off"
 								value={formData.stock}
 								onChange={(e) => handleChange("stock", e.target.value)}
 								className="h-11 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -132,12 +158,19 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 						</div>
 
 						<div className="grid gap-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="new-product-price"
+							>
 								Đơn giá
 							</label>
 							<input
+								id="new-product-price"
+								name="newProductPrice"
 								type="number"
 								min="0"
+								inputMode="numeric"
+								autoComplete="off"
 								value={formData.price}
 								onChange={(e) => handleChange("price", e.target.value)}
 								className="h-11 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -145,11 +178,18 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 						</div>
 
 						<div className="grid gap-2 md:col-span-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="new-product-image"
+							>
 								Ảnh sản phẩm
 							</label>
 							<input
-								type="text"
+								id="new-product-image"
+								name="newProductImageUrl"
+								type="url"
+								autoComplete="off"
+								spellCheck={false}
 								value={formData.image}
 								onChange={(e) => handleChange("image", e.target.value)}
 								placeholder="Dán URL ảnh sản phẩm"
@@ -158,11 +198,18 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 						</div>
 
 						<div className="grid gap-2 md:col-span-2">
-							<label className="text-sm font-semibold text-slate-700">
+							<label
+								className="text-sm font-semibold text-slate-700"
+								htmlFor="new-product-description"
+							>
 								Mô tả ngắn
 							</label>
 							<textarea
+								id="new-product-description"
+								name="newProductDescription"
 								rows="4"
+								autoComplete="off"
+								spellCheck={false}
 								value={formData.description}
 								onChange={(e) => handleChange("description", e.target.value)}
 								className="rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -174,13 +221,13 @@ function ModalThemSanPham({ open, onClose, onSave }) {
 						<button
 							type="button"
 							onClick={handleClose}
-							className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 cursor-pointer"
+							className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
 						>
 							Hủy
 						</button>
 						<button
 							type="submit"
-							className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 cursor-pointer"
+							className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
 						>
 							Thêm sản phẩm
 						</button>

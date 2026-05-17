@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	FiBookOpen,
 	FiEdit2,
@@ -9,15 +9,46 @@ import {
 	FiShoppingBag,
 	FiUser,
 } from "react-icons/fi";
-import {
-	getStoredUserProfile,
-	saveUserProfile,
-} from "../utils/userProfile";
+import { getProfileStats, updateProfile } from "../services/userService";
+import { getAuthToken, updateStoredAuthUser } from "../utils/auth";
+import { getStoredUserProfile } from "../utils/userProfile";
 
 function Profile() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [isSaved, setIsSaved] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [errorMessage, setErrorMessage] = useState("");
 	const [profile, setProfile] = useState(() => getStoredUserProfile());
+	const [stats, setStats] = useState({
+		totalOrders: 0,
+		totalPurchasedItems: 0,
+	});
+	const hasFetchedStatsRef = useRef(false);
+
+	useEffect(() => {
+		if (hasFetchedStatsRef.current) {
+			return;
+		}
+
+		hasFetchedStatsRef.current = true;
+
+		const fetchProfileStats = async () => {
+			const token = getAuthToken();
+
+			if (!token) {
+				return;
+			}
+
+			try {
+				const response = await getProfileStats(token);
+				setStats(response.stats || { totalOrders: 0, totalPurchasedItems: 0 });
+			} catch {
+				// Keep fallback 0 values if stats request fails.
+			}
+		};
+
+		fetchProfileStats();
+	}, []);
 
 	const handleChange = (field, value) => {
 		setProfile((prev) => ({
@@ -25,13 +56,48 @@ function Profile() {
 			[field]: value,
 		}));
 		setIsSaved(false);
+		setErrorMessage("");
 	};
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
-		saveUserProfile(profile);
-		setIsEditing(false);
-		setIsSaved(true);
+	const handleSubmit = async (event) => {
+		event.preventDefault();
+
+		if (
+			!profile.fullName.trim() ||
+			!profile.email.trim() ||
+			!profile.phone.trim() ||
+			!profile.address.trim()
+		) {
+			setErrorMessage("Vui lòng nhập đầy đủ họ tên, email, số điện thoại và địa chỉ.");
+			return;
+		}
+
+		const token = getAuthToken();
+
+		if (!token) {
+			setErrorMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+			return;
+		}
+
+		setIsSubmitting(true);
+
+		try {
+			const response = await updateProfile(token, {
+				fullName: profile.fullName.trim(),
+				email: profile.email.trim(),
+				phone: profile.phone.trim(),
+				address: profile.address.trim(),
+			});
+
+			setProfile(response.user);
+			updateStoredAuthUser(response.user);
+			setIsEditing(false);
+			setIsSaved(true);
+		} catch (error) {
+			setErrorMessage(error.message || "Cập nhật thông tin thất bại.");
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -40,12 +106,12 @@ function Profile() {
 				<div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
 					<div className="flex items-start gap-4">
 						<div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-900 text-2xl font-bold text-white">
-							T
+							{profile.fullName?.trim()?.split(/\s+/)?.at(-1)?.charAt(0)?.toUpperCase() || "T"}
 						</div>
 						<div>
 							<p className="text-sm font-medium text-blue-600">Tài khoản của tôi</p>
 							<h1 className="mt-1 text-3xl font-bold text-slate-900">
-								{profile.fullName}
+								{profile.fullName || "Người dùng"}
 							</h1>
 							<p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
 								Quản lý thông tin cá nhân và cập nhật chi tiết liên hệ để việc mua
@@ -60,14 +126,18 @@ function Profile() {
 								<FiShoppingBag className="h-4 w-4" />
 								<span>Đơn hàng</span>
 							</div>
-							<p className="mt-3 text-2xl font-bold text-slate-900">12</p>
+							<p className="mt-3 text-2xl font-bold text-slate-900">
+								{stats.totalOrders}
+							</p>
 						</div>
 						<div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
 							<div className="flex items-center gap-2 text-sm text-slate-500">
 								<FiBookOpen className="h-4 w-4" />
 								<span>Đã mua</span>
 							</div>
-							<p className="mt-3 text-2xl font-bold text-slate-900">36</p>
+							<p className="mt-3 text-2xl font-bold text-slate-900">
+								{stats.totalPurchasedItems}
+							</p>
 						</div>
 					</div>
 				</div>
@@ -89,6 +159,7 @@ function Profile() {
 						onClick={() => {
 							setIsEditing((prev) => !prev);
 							setIsSaved(false);
+							setErrorMessage("");
 						}}
 						className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
 					>
@@ -155,6 +226,12 @@ function Profile() {
 					</label>
 				</div>
 
+				{errorMessage && (
+					<div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+						{errorMessage}
+					</div>
+				)}
+
 				<div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
 					<p className={`text-sm ${isSaved ? "text-green-600" : "text-slate-500"}`}>
 						{isSaved
@@ -163,11 +240,11 @@ function Profile() {
 					</p>
 					<button
 						type="submit"
-						disabled={!isEditing}
+						disabled={!isEditing || isSubmitting}
 						className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-slate-300"
 					>
 						<FiSave className="h-4 w-4" />
-						Lưu thay đổi
+						{isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
 					</button>
 				</div>
 			</form>

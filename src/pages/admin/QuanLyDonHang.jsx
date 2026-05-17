@@ -1,14 +1,30 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Search from "../../components/Search";
-import {
-	adminInitialOrders,
-	adminOrderStatusOptions,
-	adminOrderStatusOrder,
-} from "../../data/orders";
 import ModalChiTietDonHang from "../../modals/ModalChiTietDonHang";
+import { getAdminOrders, updateAdminOrderStatus } from "../../services/adminService";
+import { getAuthToken, signOut } from "../../utils/auth";
+
+const adminOrderStatusOptions = [
+	"Tất cả trạng thái",
+	"Chờ xác nhận",
+	"Đang giao hàng",
+	"Đã giao",
+	"Đã hủy",
+];
+
+const adminOrderStatusOrder = {
+	"Chờ xác nhận": 0,
+	"Đang giao hàng": 1,
+	"Đã giao": 2,
+	"Đã hủy": 3,
+};
 
 function formatCurrency(value) {
-	return `${value.toLocaleString("vi-VN")} đ`;
+	return `${Number(value || 0).toLocaleString("vi-VN")} đ`;
+}
+
+function formatOrderDate(value) {
+	return new Date(value).toLocaleDateString("vi-VN");
 }
 
 function getStatusClass(status) {
@@ -20,15 +36,64 @@ function getStatusClass(status) {
 		return "bg-amber-50 text-amber-600";
 	}
 
+	if (status === "Đã hủy") {
+		return "bg-slate-100 text-slate-500";
+	}
+
 	return "bg-red-50 text-red-500";
 }
 
+function normalizeOrder(order) {
+	return {
+		...order,
+		id: order.code,
+		orderDateLabel: formatOrderDate(order.orderDate),
+		items: (order.items || []).map((item) => ({
+			...item,
+			id: item.code,
+		})),
+	};
+}
+
 function QuanLyDonHang() {
-	const [orders, setOrders] = useState(adminInitialOrders);
+	const [orders, setOrders] = useState([]);
 	const [searchValue, setSearchValue] = useState("");
 	const [selectedStatus, setSelectedStatus] = useState("Tất cả trạng thái");
 	const [selectedOrderId, setSelectedOrderId] = useState(null);
 	const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+	const [errorMessage, setErrorMessage] = useState("");
+	const hasFetchedOrdersRef = useRef(false);
+
+	useEffect(() => {
+		if (hasFetchedOrdersRef.current) {
+			return;
+		}
+
+		hasFetchedOrdersRef.current = true;
+
+		const fetchOrders = async () => {
+			const token = getAuthToken();
+
+			if (!token) {
+				setErrorMessage("Phiên đăng nhập đã hết hạn.");
+				return;
+			}
+
+			try {
+				const response = await getAdminOrders(token);
+				setOrders((response.orders || []).map(normalizeOrder));
+				setErrorMessage("");
+			} catch (error) {
+				if (error.message === "Unauthorized. Invalid token.") {
+					await signOut();
+				}
+
+				setErrorMessage(error.message || "Không thể tải danh sách đơn hàng.");
+			}
+		};
+
+		fetchOrders();
+	}, []);
 
 	const filteredOrders = useMemo(() => {
 		const normalizedSearch = searchValue.trim().toLowerCase();
@@ -37,28 +102,29 @@ function QuanLyDonHang() {
 			.filter((order) => {
 				const matchesSearch =
 					normalizedSearch.length === 0 ||
-					order.id.toLowerCase().includes(normalizedSearch) ||
+					order.code.toLowerCase().includes(normalizedSearch) ||
 					order.customerName.toLowerCase().includes(normalizedSearch) ||
 					order.phone.toLowerCase().includes(normalizedSearch);
 
 				const matchesStatus =
-					selectedStatus === "Tất cả trạng thái" ||
-					order.status === selectedStatus;
+					selectedStatus === "Tất cả trạng thái" || order.status === selectedStatus;
 
 				return matchesSearch && matchesStatus;
 			})
 			.sort(
-				(a, b) => adminOrderStatusOrder[a.status] - adminOrderStatusOrder[b.status]
+				(a, b) =>
+					(adminOrderStatusOrder[a.status] ?? 999) -
+					(adminOrderStatusOrder[b.status] ?? 999)
 			);
 	}, [orders, searchValue, selectedStatus]);
 
 	const selectedOrder = useMemo(
-		() => orders.find((order) => order.id === selectedOrderId) || null,
+		() => orders.find((order) => order._id === selectedOrderId) || null,
 		[orders, selectedOrderId]
 	);
 
 	const handleOpenOrderModal = (order) => {
-		setSelectedOrderId(order.id);
+		setSelectedOrderId(order._id);
 		setIsOrderModalOpen(true);
 	};
 
@@ -67,12 +133,29 @@ function QuanLyDonHang() {
 		setIsOrderModalOpen(false);
 	};
 
-	const handleUpdateOrderStatus = (orderId, nextStatus) => {
-		setOrders((prev) =>
-			prev.map((order) =>
-				order.id === orderId ? { ...order, status: nextStatus } : order
-			)
-		);
+	const handleUpdateOrderStatus = async (orderId, nextStatus) => {
+		const token = getAuthToken();
+
+		if (!token) {
+			setErrorMessage("Phiên đăng nhập đã hết hạn.");
+			return false;
+		}
+
+		try {
+			const response = await updateAdminOrderStatus(token, orderId, nextStatus);
+			const normalizedOrder = normalizeOrder(response.order);
+
+			setOrders((prev) =>
+				prev.map((order) =>
+					order._id === normalizedOrder._id ? normalizedOrder : order
+				)
+			);
+			setErrorMessage("");
+			return true;
+		} catch (error) {
+			setErrorMessage(error.message || "Cập nhật trạng thái đơn hàng thất bại.");
+			return false;
+		}
 	};
 
 	return (
@@ -110,6 +193,12 @@ function QuanLyDonHang() {
 					</div>
 				</div>
 
+				{errorMessage && (
+					<div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+						{errorMessage}
+					</div>
+				)}
+
 				<div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 					<div className="border-b border-slate-200 px-6 py-4">
 						<h2 className="text-lg font-bold text-slate-900">Danh sách đơn hàng</h2>
@@ -135,19 +224,19 @@ function QuanLyDonHang() {
 								{filteredOrders.length > 0 ? (
 									filteredOrders.map((order) => (
 										<tr
-											key={order.id}
+											key={order._id}
 											onClick={() => handleOpenOrderModal(order)}
 											className="cursor-pointer text-sm text-slate-700 transition hover:bg-slate-50"
 										>
 											<td className="px-6 py-4 font-medium text-slate-500">
-												{order.id}
+												{order.code}
 											</td>
 											<td className="px-6 py-4 font-semibold text-slate-900">
 												{order.customerName}
 											</td>
 											<td className="px-6 py-4">{order.phone}</td>
 											<td className="px-6 py-4">{order.address}</td>
-											<td className="px-6 py-4">{order.orderDate}</td>
+											<td className="px-6 py-4">{order.orderDateLabel}</td>
 											<td className="px-6 py-4 font-semibold text-slate-900">
 												{formatCurrency(order.total)}
 											</td>

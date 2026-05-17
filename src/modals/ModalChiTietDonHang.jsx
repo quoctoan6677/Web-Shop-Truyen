@@ -1,7 +1,7 @@
 import { FiMapPin, FiPhone, FiUser, FiX } from "react-icons/fi";
 
 function formatCurrency(value) {
-	return `${value.toLocaleString("vi-VN")} đ`;
+	return `${Number(value || 0).toLocaleString("vi-VN")} đ`;
 }
 
 function getStatusClass(status) {
@@ -11,6 +11,10 @@ function getStatusClass(status) {
 
 	if (status === "Đang giao hàng") {
 		return "bg-amber-50 text-amber-600";
+	}
+
+	if (status === "Đã hủy") {
+		return "bg-slate-100 text-slate-500";
 	}
 
 	return "bg-red-50 text-red-500";
@@ -65,7 +69,7 @@ function ModalChiTietDonHang({ open, order, onClose, onUpdateStatus }) {
 
 	const actionConfig = getActionConfig(order.status);
 
-	const handleStatusChange = (action) => {
+	const handleStatusChange = async (action) => {
 		if (!action) {
 			return;
 		}
@@ -76,7 +80,7 @@ function ModalChiTietDonHang({ open, order, onClose, onUpdateStatus }) {
 			return;
 		}
 
-		onUpdateStatus(order.id, action.nextStatus);
+		await onUpdateStatus(order._id, action.nextStatus);
 	};
 
 	return (
@@ -85,7 +89,7 @@ function ModalChiTietDonHang({ open, order, onClose, onUpdateStatus }) {
 				<button
 					type="button"
 					onClick={onClose}
-					className="absolute right-3 top-3 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 cursor-pointer"
+					className="absolute right-3 top-3 rounded-full p-2 text-slate-500 transition hover:bg-slate-100"
 					aria-label="Đóng chi tiết đơn hàng"
 				>
 					<FiX className="h-5 w-5" />
@@ -94,15 +98,15 @@ function ModalChiTietDonHang({ open, order, onClose, onUpdateStatus }) {
 				<div className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
 					<div>
 						<h2 className="text-2xl font-bold text-slate-900">
-							Chi tiết đơn hàng: {order.id}
+							Chi tiết đơn hàng: {order.code}
 						</h2>
 						<p className="mt-1 text-sm text-slate-500">
-							Ngày đặt: {order.orderDate}
+							Ngày đặt: {order.orderDateLabel}
 						</p>
 					</div>
 
 					<span
-						className={`inline-flex w-fit rounded-full mr-8 px-3 py-1 text-sm font-semibold ${getStatusClass(
+						className={`mr-8 inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${getStatusClass(
 							order.status
 						)}`}
 					>
@@ -156,7 +160,7 @@ function ModalChiTietDonHang({ open, order, onClose, onUpdateStatus }) {
 							<div className="max-h-72 divide-y divide-slate-200 overflow-y-auto">
 								{order.items.map((item) => (
 									<div
-										key={item.id}
+										key={item._id || item.id}
 										className="grid gap-4 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto]"
 									>
 										<div className="min-w-0">
@@ -187,35 +191,33 @@ function ModalChiTietDonHang({ open, order, onClose, onUpdateStatus }) {
 								<span>Tổng thanh toán</span>
 								<span className="text-red-500">{formatCurrency(order.total)}</span>
 							</div>
-
 						</div>
-                        {actionConfig.primaryAction || actionConfig.secondaryAction ? (
-                            <div className="mt-5 flex justify-end gap-3">
-                                {actionConfig.secondaryAction ? (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            handleStatusChange(actionConfig.secondaryAction)
-                                        }
-                                        className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 cursor-pointer"
-                                    >
-                                        {actionConfig.secondaryAction.label}
-                                    </button>
-                                ) : null}
 
-                                {actionConfig.primaryAction ? (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            handleStatusChange(actionConfig.primaryAction)
-                                        }
-                                        className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 cursor-pointer"
-                                    >
-                                        {actionConfig.primaryAction.label}
-                                    </button>
-                                ) : null}
-                            </div>
-                        ) : null}
+						{actionConfig.primaryAction || actionConfig.secondaryAction ? (
+							<div className="mt-5 flex justify-end gap-3">
+								{actionConfig.secondaryAction ? (
+									<button
+										type="button"
+										onClick={() =>
+											handleStatusChange(actionConfig.secondaryAction)
+										}
+										className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+									>
+										{actionConfig.secondaryAction.label}
+									</button>
+								) : null}
+
+								{actionConfig.primaryAction ? (
+									<button
+										type="button"
+										onClick={() => handleStatusChange(actionConfig.primaryAction)}
+										className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+									>
+										{actionConfig.primaryAction.label}
+									</button>
+								) : null}
+							</div>
+						) : null}
 					</div>
 				</div>
 			</div>

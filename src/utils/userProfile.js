@@ -1,10 +1,10 @@
 const STORAGE_KEY = "shop-truyen-user-profile";
 
 export const defaultUserProfile = {
-	fullName: "Phạm Quốc Toản",
-	email: "toanpham@example.com",
-	phone: "0328 322 623",
-	address: "Bắc Từ Liêm, Hà Nội",
+	fullName: "",
+	email: "",
+	phone: "",
+	address: "",
 };
 
 export function getStoredUserProfile() {
@@ -34,4 +34,14 @@ export function saveUserProfile(profile) {
 	}
 
 	window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+	window.dispatchEvent(new Event("user-profile-updated"));
+}
+
+export function clearUserProfile() {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	window.localStorage.removeItem(STORAGE_KEY);
+	window.dispatchEvent(new Event("user-profile-updated"));
 }

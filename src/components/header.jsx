@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
 	FiBookOpen,
@@ -15,20 +15,15 @@ import { getStoredUserProfile } from "../utils/userProfile";
 function Header() {
 	const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
+	const [userProfile, setUserProfile] = useState(() => getStoredUserProfile());
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [searchParams] = useSearchParams();
 	const profileMenuRef = useRef(null);
-	const userProfile = useMemo(() => getStoredUserProfile(), []);
 	const isLoggedIn = isAuthenticated();
-	const activeItem = searchParams.get("category") || "Táº¥t cáº£";
+	const activeItem = searchParams.get("category") || "Tat ca";
 	const avatarLabel =
-		userProfile.fullName
-			?.trim()
-			?.split(/\s+/)
-			?.at(-1)
-			?.charAt(0)
-			?.toUpperCase() || "T";
+		userProfile.fullName?.trim()?.split(/\s+/)?.at(-1)?.charAt(0)?.toUpperCase() || "T";
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -47,6 +42,20 @@ function Header() {
 	useEffect(() => {
 		setSearchValue(searchParams.get("q") || "");
 	}, [searchParams]);
+
+	useEffect(() => {
+		const syncProfile = () => {
+			setUserProfile(getStoredUserProfile());
+		};
+
+		window.addEventListener("user-profile-updated", syncProfile);
+		window.addEventListener("storage", syncProfile);
+
+		return () => {
+			window.removeEventListener("user-profile-updated", syncProfile);
+			window.removeEventListener("storage", syncProfile);
+		};
+	}, []);
 
 	const handleNavigate = (path) => {
 		setIsProfileMenuOpen(false);
@@ -92,7 +101,7 @@ function Header() {
 
 	const handleCategorySelect = (category) => {
 		updateHomeSearchParams((nextSearchParams) => {
-			if (category === "Táº¥t cáº£") {
+			if (category === "Tat ca") {
 				nextSearchParams.delete("category");
 			} else {
 				nextSearchParams.set("category", category);
@@ -109,10 +118,10 @@ function Header() {
 					navigate("/");
 				}}
 				className="flex items-center gap-2 self-center justify-self-start text-2xl font-bold text-slate-900 cursor-pointer"
-				aria-label="Về trang chủ"
+				aria-label="Ve trang chu"
 			>
 				<FiBookOpen className="h-6 w-6 text-blue-600" aria-hidden="true" />
-				<span>Shop Truyen</span>
+				<span>ShopTruyen</span>
 			</button>
 
 			<div className="grid min-w-0 gap-2">
@@ -130,7 +139,7 @@ function Header() {
 						type="button"
 						className="ml-4 flex h-11 w-11 self-start items-center cursor-pointer justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:bg-slate-50 max-md:mr-0 max-md:justify-self-end max-md:[grid-area:cart]"
 						onClick={() => navigate("/cart")}
-						aria-label="Gio hang"
+						aria-label="Giỏ hàng"
 					>
 						<FiShoppingCart className="h-5 w-5" aria-hidden="true" />
 					</button>
@@ -145,7 +154,7 @@ function Header() {
 							type="button"
 							className="flex h-13 items-center gap-2 rounded-full border border-slate-300 bg-blue-900 px-3 font-semibold text-white transition hover:bg-blue-700 cursor-pointer"
 							onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-							aria-label="Ho so"
+							aria-label="Hồ sơ"
 						>
 							<span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-sm">
 								{avatarLabel}

@@ -4,6 +4,8 @@ import { getStoredUserProfile } from "../utils/userProfile";
 
 function ModalMuaNgay({ product, products = [], open, onClose, onConfirmOrder }) {
 	const [quantity, setQuantity] = useState(1);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [errorMessage, setErrorMessage] = useState("");
 	const [customerInfo, setCustomerInfo] = useState({
 		fullName: "",
 		phone: "",
@@ -33,6 +35,8 @@ function ModalMuaNgay({ product, products = [], open, onClose, onConfirmOrder })
 		const userProfile = getStoredUserProfile();
 
 		setQuantity(product?.quantity || 1);
+		setErrorMessage("");
+		setIsSubmitting(false);
 		setCustomerInfo({
 			fullName: userProfile.fullName,
 			phone: userProfile.phone,
@@ -59,19 +63,39 @@ function ModalMuaNgay({ product, products = [], open, onClose, onConfirmOrder })
 			...prev,
 			[field]: value,
 		}));
+		setErrorMessage("");
 	};
 
-	const handleConfirmOrder = () => {
-		if (onConfirmOrder) {
-			onConfirmOrder({
+	const handleConfirmOrder = async () => {
+		if (!customerInfo.fullName.trim() || !customerInfo.phone.trim() || !customerInfo.address.trim()) {
+			setErrorMessage("Vui lòng nhập đầy đủ họ tên, số điện thoại và địa chỉ.");
+			return;
+		}
+
+		if (!onConfirmOrder) {
+			onClose();
+			return;
+		}
+
+		setIsSubmitting(true);
+		setErrorMessage("");
+
+		try {
+			const isSuccess = await onConfirmOrder({
 				items: isSingleProduct
 					? [{ ...singleItem, quantity }]
 					: orderItems,
 				customerInfo,
 			});
-		}
 
-		onClose();
+			if (isSuccess) {
+				onClose();
+			}
+		} catch (error) {
+			setErrorMessage(error.message || "Tạo đơn hàng thất bại.");
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	const singleItem = orderItems[0];
@@ -221,6 +245,12 @@ function ModalMuaNgay({ product, products = [], open, onClose, onConfirmOrder })
 							/>
 						</div>
 
+						{errorMessage && (
+							<div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+								{errorMessage}
+							</div>
+						)}
+
 						<div className="mt-6 rounded-xl bg-slate-50 px-4 py-3">
 							<div className="flex items-center justify-between text-sm text-slate-600">
 								<span>Tạm tính</span>
@@ -243,9 +273,10 @@ function ModalMuaNgay({ product, products = [], open, onClose, onConfirmOrder })
 							<button
 								type="button"
 								onClick={handleConfirmOrder}
-								className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 cursor-pointer"
+								disabled={isSubmitting}
+								className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-300"
 							>
-								Xác nhận đặt hàng
+								{isSubmitting ? "Đang tạo đơn..." : "Xác nhận đặt hàng"}
 							</button>
 						</div>
 					</div>

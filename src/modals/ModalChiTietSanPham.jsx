@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiShoppingCart, FiX } from "react-icons/fi";
+import { getProductById } from "../services/productService";
 
 function ModalChiTietSanPham({
 	product,
@@ -9,11 +10,32 @@ function ModalChiTietSanPham({
 	onBuyNow,
 }) {
 	const [quantity, setQuantity] = useState(1);
+	const [productDetail, setProductDetail] = useState(product);
+	const [isLoading, setIsLoading] = useState(false);
+	const [errorMessage, setErrorMessage] = useState("");
 
 	useEffect(() => {
-		if (open) {
-			setQuantity(1);
+		if (!open || !product?._id) {
+			return;
 		}
+
+		setQuantity(1);
+		setProductDetail(product);
+		setIsLoading(true);
+		setErrorMessage("");
+
+		const fetchProductDetail = async () => {
+			try {
+				const response = await getProductById(product._id);
+				setProductDetail(response.product);
+			} catch (error) {
+				setErrorMessage(error.message || "Khong the tai chi tiet san pham.");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchProductDetail();
 	}, [open, product]);
 
 	const increase = () => setQuantity((prev) => prev + 1);
@@ -25,7 +47,8 @@ function ModalChiTietSanPham({
 
 	if (!open || !product) return null;
 
-	const total = product.price * quantity;
+	const currentProduct = productDetail || product;
+	const total = currentProduct.price * quantity;
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
@@ -40,8 +63,8 @@ function ModalChiTietSanPham({
 				<div className="grid h-full min-h-0 gap-6 md:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
 					<div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200">
 						<img
-							src={product.image}
-							alt={product.name}
+							src={currentProduct.image}
+							alt={currentProduct.name}
 							className="h-full max-h-full w-full object-cover"
 						/>
 					</div>
@@ -49,18 +72,29 @@ function ModalChiTietSanPham({
 					<div className="flex h-full min-h-0 min-w-0 flex-col justify-between overflow-hidden">
 						<div className="min-h-0 min-w-0 overflow-hidden">
 							<h2 className="break-words pr-10 text-2xl font-bold text-slate-900 md:text-3xl">
-								{product.name}
+								{currentProduct.name}
 							</h2>
 
+							<p className="mt-2 text-sm text-slate-500">
+								Ma san pham: {currentProduct.code || "Dang cap nhat"}
+							</p>
+
 							<p className="mt-3 text-sm font-medium text-slate-700">
-								Tóm tắt nội dung:
+								Tom tat noi dung:
 							</p>
 
 							<div className="mt-2 max-h-[220px] min-h-0 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-4">
-								<p className="break-words text-sm leading-7 text-slate-600">
-									{product.description ||
-										"Chưa có mô tả sản phẩm. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."}
-								</p>
+								{isLoading ? (
+									<p className="text-sm leading-7 text-slate-600">
+										Dang tai chi tiet san pham...
+									</p>
+								) : errorMessage ? (
+									<p className="text-sm leading-7 text-red-600">{errorMessage}</p>
+								) : (
+									<p className="break-words text-sm leading-7 text-slate-600">
+										{currentProduct.description || "Chua co mo ta san pham."}
+									</p>
+								)}
 							</div>
 
 							<div className="mt-6 flex max-w-full items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
@@ -80,21 +114,21 @@ function ModalChiTietSanPham({
 									</button>
 								</div>
 								<p className="max-w-[180px] whitespace-nowrap text-right text-2xl font-bold text-red-500">
-									{total.toLocaleString()} đ
+									{total.toLocaleString()} d
 								</p>
 							</div>
 						</div>
 
 						<div className="mt-6 flex shrink-0 gap-2 border-t border-slate-200 pt-4">
 							<button
-								onClick={() => onAddToCart({ ...product, quantity })}
+								onClick={() => onAddToCart({ ...currentProduct, quantity })}
 								className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-gray-300 px-6 cursor-pointer transition hover:bg-gray-200"
 							>
 								<FiShoppingCart className="h-6 w-6" />
 							</button>
 
 							<button
-								onClick={() => onBuyNow({ ...product, quantity })}
+								onClick={() => onBuyNow({ ...currentProduct, quantity })}
 								className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-blue-500 px-4 py-3 text-center font-semibold text-white transition hover:bg-blue-600 cursor-pointer"
 							>
 								Mua ngay

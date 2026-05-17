@@ -1,45 +1,73 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
 import Search from "../../components/Search";
-import {
-	adminInitialProducts,
-	productCategoryOptions,
-	productStatusOptions,
-} from "../../data/products";
 import ModalCapNhatSanPham from "../../modals/ModalCapNhatSanPham";
 import ModalThemSanPham from "../../modals/ModalThemSanPham";
+import {
+	createAdminProduct,
+	deleteAdminProduct,
+	getAdminProducts,
+	updateAdminProduct,
+} from "../../services/adminService";
+import { getAuthToken, signOut } from "../../utils/auth";
 
-function syncProductStatus(product) {
-	const stock = Number(product.stock) || 0;
+const productCategoryOptions = ["Tất cả thể loại", "Truyện chữ", "Truyện tranh", "Combo"];
+const productStatusOptions = ["Tất cả trạng thái", "Còn hàng", "Hết hàng"];
 
+function formatCurrency(value) {
+	return `${Number(value || 0).toLocaleString("vi-VN")} đ`;
+}
+
+function normalizeProduct(product) {
 	return {
 		...product,
-		stock,
-		status: stock === 0 ? "Hết hàng" : "Còn hàng",
+		id: product.code,
+		price: Number(product.price || 0),
+		stock: Number(product.stock || 0),
 	};
 }
 
-function generateNextProductId(products) {
-	const maxId = products.reduce((currentMax, product) => {
-		const numericId = Number(product.id.replace("SP", "")) || 0;
-		return Math.max(currentMax, numericId);
-	}, 0);
-
-	return `SP${String(maxId + 1).padStart(3, "0")}`;
-}
-
-function formatCurrency(value) {
-	return `${value.toLocaleString("vi-VN")} đ`;
-}
-
 function QuanLySanPham() {
-	const [products, setProducts] = useState(adminInitialProducts.map(syncProductStatus));
+	const [products, setProducts] = useState([]);
 	const [searchValue, setSearchValue] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("Tất cả thể loại");
 	const [selectedStatus, setSelectedStatus] = useState("Tất cả trạng thái");
 	const [editingProduct, setEditingProduct] = useState(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [errorMessage, setErrorMessage] = useState("");
+	const hasFetchedProductsRef = useRef(false);
+
+	useEffect(() => {
+		if (hasFetchedProductsRef.current) {
+			return;
+		}
+
+		hasFetchedProductsRef.current = true;
+
+		const fetchProducts = async () => {
+			const token = getAuthToken();
+
+			if (!token) {
+				setErrorMessage("Phiên đăng nhập đã hết hạn.");
+				return;
+			}
+
+			try {
+				const response = await getAdminProducts(token);
+				setProducts((response.products || []).map(normalizeProduct));
+				setErrorMessage("");
+			} catch (error) {
+				if (error.message === "Unauthorized. Invalid token.") {
+					await signOut();
+				}
+
+				setErrorMessage(error.message || "Không thể tải danh sách sản phẩm.");
+			}
+		};
+
+		fetchProducts();
+	}, []);
 
 	const filteredProducts = useMemo(() => {
 		const normalizedSearch = searchValue.trim().toLowerCase();
@@ -48,7 +76,7 @@ function QuanLySanPham() {
 			const matchesSearch =
 				normalizedSearch.length === 0 ||
 				product.name.toLowerCase().includes(normalizedSearch) ||
-				product.id.toLowerCase().includes(normalizedSearch) ||
+				product.code.toLowerCase().includes(normalizedSearch) ||
 				product.category.toLowerCase().includes(normalizedSearch);
 
 			const matchesCategory =
@@ -73,15 +101,38 @@ function QuanLySanPham() {
 		setIsEditModalOpen(false);
 	};
 
-	const handleSaveProduct = (updatedProduct) => {
-		const normalizedProduct = syncProductStatus(updatedProduct);
+	const handleSaveProduct = async (updatedProduct) => {
+		const token = getAuthToken();
 
-		setProducts((prev) =>
-			prev.map((product) =>
-				product.id === normalizedProduct.id ? normalizedProduct : product
-			)
-		);
-		handleCloseEditModal();
+		if (!token) {
+			setErrorMessage("Phiên đăng nhập đã hết hạn.");
+			return false;
+		}
+
+		try {
+			const response = await updateAdminProduct(token, updatedProduct._id, {
+				name: updatedProduct.name,
+				category: updatedProduct.category,
+				price: updatedProduct.price,
+				stock: updatedProduct.stock,
+				image: updatedProduct.image,
+				description: updatedProduct.description,
+			});
+
+			const normalizedProduct = normalizeProduct(response.product);
+
+			setProducts((prev) =>
+				prev.map((product) =>
+					product._id === normalizedProduct._id ? normalizedProduct : product
+				)
+			);
+			setErrorMessage("");
+			handleCloseEditModal();
+			return true;
+		} catch (error) {
+			setErrorMessage(error.message || "Cập nhật sản phẩm thất bại.");
+			return false;
+		}
 	};
 
 	const handleOpenCreateModal = () => {
@@ -92,17 +143,28 @@ function QuanLySanPham() {
 		setIsCreateModalOpen(false);
 	};
 
-	const handleCreateProduct = (newProduct) => {
-		const normalizedProduct = syncProductStatus({
-			...newProduct,
-			id: generateNextProductId(products),
-		});
+	const handleCreateProduct = async (newProduct) => {
+		const token = getAuthToken();
 
-		setProducts((prev) => [normalizedProduct, ...prev]);
-		handleCloseCreateModal();
+		if (!token) {
+			setErrorMessage("Phiên đăng nhập đã hết hạn.");
+			return false;
+		}
+
+		try {
+			const response = await createAdminProduct(token, newProduct);
+			const normalizedProduct = normalizeProduct(response.product);
+			setProducts((prev) => [normalizedProduct, ...prev]);
+			setErrorMessage("");
+			handleCloseCreateModal();
+			return true;
+		} catch (error) {
+			setErrorMessage(error.message || "Thêm sản phẩm thất bại.");
+			return false;
+		}
 	};
 
-	const handleDeleteProduct = (productToDelete) => {
+	const handleDeleteProduct = async (productToDelete) => {
 		const shouldDelete = window.confirm(
 			`Bạn có chắc muốn xóa sản phẩm "${productToDelete.name}" không?`
 		);
@@ -111,9 +173,22 @@ function QuanLySanPham() {
 			return;
 		}
 
-		setProducts((prev) =>
-			prev.filter((product) => product.id !== productToDelete.id)
-		);
+		const token = getAuthToken();
+
+		if (!token) {
+			setErrorMessage("Phiên đăng nhập đã hết hạn.");
+			return;
+		}
+
+		try {
+			await deleteAdminProduct(token, productToDelete._id);
+			setProducts((prev) =>
+				prev.filter((product) => product._id !== productToDelete._id)
+			);
+			setErrorMessage("");
+		} catch (error) {
+			setErrorMessage(error.message || "Xóa sản phẩm thất bại.");
+		}
 	};
 
 	return (
@@ -163,7 +238,7 @@ function QuanLySanPham() {
 							<button
 								type="button"
 								onClick={handleOpenCreateModal}
-								className="flex h-11 items-center justify-center gap-2 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 cursor-pointer"
+								className="flex h-11 items-center justify-center gap-2 rounded-full bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700"
 							>
 								<FiPlus className="h-4 w-4" />
 								<span>Thêm sản phẩm mới</span>
@@ -171,6 +246,12 @@ function QuanLySanPham() {
 						</div>
 					</div>
 				</div>
+
+				{errorMessage && (
+					<div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+						{errorMessage}
+					</div>
+				)}
 
 				<div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 					<div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
@@ -200,9 +281,9 @@ function QuanLySanPham() {
 							<tbody className="divide-y divide-slate-200 bg-white">
 								{filteredProducts.length > 0 ? (
 									filteredProducts.map((product) => (
-										<tr key={product.id} className="text-sm text-slate-700">
+										<tr key={product._id} className="text-sm text-slate-700">
 											<td className="px-6 py-4 font-medium text-slate-500">
-												{product.id}
+												{product.code}
 											</td>
 											<td className="px-6 py-4 font-semibold text-slate-900">
 												{product.name}
@@ -228,7 +309,7 @@ function QuanLySanPham() {
 													<button
 														type="button"
 														onClick={() => handleOpenEditModal(product)}
-														className="flex h-7 w-7 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600 transition hover:bg-blue-100 cursor-pointer"
+														className="flex h-7 w-7 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600 transition hover:bg-blue-100"
 														aria-label={`Cập nhật sản phẩm ${product.name}`}
 													>
 														<FiEdit2 className="h-4 w-4" />
@@ -236,7 +317,7 @@ function QuanLySanPham() {
 													<button
 														type="button"
 														onClick={() => handleDeleteProduct(product)}
-														className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 transition hover:bg-red-100 cursor-pointer"
+														className="flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 transition hover:bg-red-100"
 														aria-label={`Xóa sản phẩm ${product.name}`}
 													>
 														<FiTrash2 className="h-4 w-4" />

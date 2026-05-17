@@ -1,11 +1,6 @@
 # Dependencies
 node_modules/
 
-# Build output
-dist/
-dist-ssr/
-coverage/
-
 # Environment files
 .env
 .env.*
@@ -18,10 +13,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-# Vite / tooling cache
-.vite/
+# Runtime files
+pids/
+*.pid
+*.pid.lock
+
+# Coverage / reports
+coverage/
 
 # Editor and OS files
 .vscode/*

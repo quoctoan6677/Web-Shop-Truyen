@@ -31,50 +31,38 @@ function Login() {
 		event.preventDefault();
 
 		if (!formData.email.trim() || !formData.password.trim()) {
-			setErrorMessage("Vui lòng nhập đầy đủ email và mật khẩu.");
+			setErrorMessage("Vui long nhap day du email va mat khau.");
 			return;
 		}
 
 		setIsSubmitting(true);
-		await new Promise((resolve) => setTimeout(resolve, 500));
 
-		const account = signIn(
-			formData.email.trim(),
-			formData.password,
-			formData.remember
-		);
+		try {
+			const account = await signIn(
+				formData.email.trim(),
+				formData.password,
+				formData.remember
+			);
 
-		setIsSubmitting(false);
-
-		if (!account) {
-			setErrorMessage("Email hoặc mật khẩu không đúng.");
-			return;
+			navigate(account.role === "admin" ? "/admin" : "/");
+		} catch (error) {
+			setErrorMessage(error.message || "Email hoặc mật khẩu không đúng.");
+		} finally {
+			setIsSubmitting(false);
 		}
-
-		navigate(account.role === "admin" ? "/admin" : "/");
 	};
 
 	return (
 		<section className="flex min-h-screen items-center justify-center px-4 py-10">
 			<div className="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm sm:p-10">
 				<div className="mx-auto w-full max-w-md">
-					<h1 className="mt-2 text-4xl font-bold text-slate-900">Đăng nhập</h1>
-					<p className="mt-3 text-sm leading-6 text-slate-500">
+					<h1 className="mt-2 text-4xl font-bold text-slate-900 text-center">Đăng nhập</h1>
+					<p className="mt-3 text-sm leading-6 text-slate-500 text-center">
 						Chào mừng bạn đến với ShopTruyen.
 					</p>
-
-					<div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-						<p className="font-semibold text-slate-900">Tài khoản người dùng</p>
-						<p className="mt-1">Email: {credentials.user.email}</p>
-						<p>Mật khẩu: {credentials.user.password}</p>
-						<p className="mt-4 font-semibold text-slate-900">Tài khoản admin</p>
-						<p className="mt-1">Email: {credentials.admin.email}</p>
-						<p>Mật khẩu: {credentials.admin.password}</p>
-					</div>
-
 					<form onSubmit={handleSubmit} className="mt-8 grid gap-5">
 						<label className="grid gap-2 text-sm font-medium text-slate-700">
-							Email
+							Email:
 							<div className="relative">
 								<FiMail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 								<input
@@ -88,7 +76,7 @@ function Login() {
 						</label>
 
 						<label className="grid gap-2 text-sm font-medium text-slate-700">
-							Mật khẩu
+							Mật khẩu:
 							<div className="relative">
 								<FiLock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 								<input

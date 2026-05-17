@@ -1,11 +1,65 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CartCard from "../components/CartCard";
-import { initialCartItems } from "../data/products";
 import ModalMuaNgay from "../modals/ModalMuaNgay";
+import {
+	deleteCartItem,
+	getCart,
+	updateCartItem,
+} from "../services/cartService";
+import { createOrder } from "../services/orderService";
+import { getAuthToken } from "../utils/auth";
+
+function mapCartItem(item) {
+	return {
+		id: item._id,
+		productId: item.productInfo?._id || item.product,
+		name: item.productInfo?.name || "",
+		price: item.productInfo?.price || 0,
+		image: item.productInfo?.image || "",
+		quantity: item.quantity,
+		selected: item.selected,
+	};
+}
 
 function Cart() {
-	const [cart, setCart] = useState(initialCartItems);
+	const [cart, setCart] = useState([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [isUpdating, setIsUpdating] = useState(false);
+	const [errorMessage, setErrorMessage] = useState("");
 	const [openBuyNowModal, setOpenBuyNowModal] = useState(false);
+	const hasFetchedCartRef = useRef(false);
+
+	useEffect(() => {
+		if (hasFetchedCartRef.current) {
+			return;
+		}
+
+		hasFetchedCartRef.current = true;
+
+		const fetchCart = async () => {
+			const token = getAuthToken();
+
+			if (!token) {
+				setErrorMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+				setIsLoading(false);
+				return;
+			}
+
+			setIsLoading(true);
+			setErrorMessage("");
+
+			try {
+				const response = await getCart(token);
+				setCart((response.cartItems || []).map(mapCartItem));
+			} catch (error) {
+				setErrorMessage(error.message || "Không thể tải giỏ hàng.");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchCart();
+	}, []);
 
 	const allSelected = cart.length > 0 && cart.every((item) => item.selected);
 	const selectedItems = useMemo(
@@ -28,32 +82,82 @@ function Cart() {
 		);
 	}, [cart]);
 
-	const handleRemoveFromCart = (id) => {
-		setCart((prev) => prev.filter((item) => item.id !== id));
+	const updateLocalCartItem = (updatedItem) => {
+		setCart((prev) =>
+			prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+		);
 	};
 
-	const handleToggleSelect = (id) => {
-		setCart((prev) =>
-			prev.map((item) =>
-				item.id === id ? { ...item, selected: !item.selected } : item
+	const submitCartUpdate = async (cartItemId, payload) => {
+		const token = getAuthToken();
+
+		if (!token) {
+			setErrorMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+			return null;
+		}
+
+		setIsUpdating(true);
+		setErrorMessage("");
+
+		try {
+			const response = await updateCartItem(token, cartItemId, payload);
+			const mappedItem = mapCartItem(response.cartItem);
+			updateLocalCartItem(mappedItem);
+			return mappedItem;
+		} catch (error) {
+			setErrorMessage(error.message || "Cập nhật giỏ hàng thất bại.");
+			return null;
+		} finally {
+			setIsUpdating(false);
+		}
+	};
+
+	const handleRemoveFromCart = async (id) => {
+		const token = getAuthToken();
+
+		if (!token) {
+			setErrorMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+			return;
+		}
+
+		setIsUpdating(true);
+		setErrorMessage("");
+
+		try {
+			await deleteCartItem(token, id);
+			setCart((prev) => prev.filter((item) => item.id !== id));
+		} catch (error) {
+			setErrorMessage(error.message || "Xóa sản phẩm khỏi giỏ hàng thất bại.");
+		} finally {
+			setIsUpdating(false);
+		}
+	};
+
+	const handleToggleSelect = async (id) => {
+		const item = cart.find((cartItem) => cartItem.id === id);
+
+		if (!item) {
+			return;
+		}
+
+		await submitCartUpdate(id, {
+			selected: !item.selected,
+		});
+	};
+
+	const handleToggleSelectAll = async () => {
+		const nextSelectedState = !allSelected;
+		await Promise.all(
+			cart.map((item) =>
+				submitCartUpdate(item.id, {
+					selected: nextSelectedState,
+				})
 			)
 		);
 	};
 
-	const handleToggleSelectAll = () => {
-		const nextSelectedState = !allSelected;
-		setCart((prev) =>
-			prev.map((item) => ({
-				...item,
-				selected: nextSelectedState,
-			}))
-		);
-	};
-
-	const handleUpdateQuantity = (id, quantity) => {
-		setCart((prev) =>
-			prev.map((item) => (item.id === id ? { ...item, quantity } : item))
-		);
+	const handleUpdateQuantity = async (id, quantity) => {
+		await submitCartUpdate(id, { quantity });
 	};
 
 	const handleBuySelectedItems = () => {
@@ -68,17 +172,25 @@ function Cart() {
 		setOpenBuyNowModal(false);
 	};
 
-	const handleConfirmOrder = () => {
-		const selectedIds = new Set(selectedItems.map((item) => item.id));
+	const handleConfirmOrder = async ({ items, customerInfo }) => {
+		const token = getAuthToken();
 
-		setCart((prev) =>
-			prev
-				.filter((item) => !selectedIds.has(item.id))
-				.map((item) => ({
-					...item,
-					selected: false,
-				}))
-		);
+		if (!token) {
+			throw new Error("Phiên đăng nhập đã hết hạn.");
+		}
+
+		await createOrder(token, {
+			customerInfo,
+			items: items.map((item) => ({
+				productId: item.productId,
+				quantity: item.quantity || 1,
+				cartItemId: item.id,
+			})),
+		});
+
+		const selectedIds = new Set(items.map((item) => item.id));
+		setCart((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+		return true;
 	};
 
 	return (
@@ -89,6 +201,7 @@ function Cart() {
 						type="checkbox"
 						checked={allSelected}
 						onChange={handleToggleSelectAll}
+						disabled={isLoading || isUpdating || cart.length === 0}
 						className="h-4 w-4 cursor-pointer"
 					/>
 				</div>
@@ -100,7 +213,11 @@ function Cart() {
 			</div>
 
 			<div>
-				{cart.length === 0 ? (
+				{errorMessage ? (
+					<div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+						{errorMessage}
+					</div>
+				) : cart.length === 0 ? (
 					<p className="mt-10 text-center text-gray-500">
 						Giỏ hàng của bạn đang trống.
 					</p>
@@ -123,6 +240,7 @@ function Cart() {
 						type="checkbox"
 						checked={allSelected}
 						onChange={handleToggleSelectAll}
+						disabled={isLoading || isUpdating || cart.length === 0}
 						className="h-4 w-4 cursor-pointer"
 					/>
 				</div>
@@ -136,7 +254,7 @@ function Cart() {
 				<button
 					type="button"
 					onClick={handleBuySelectedItems}
-					disabled={selectedItems.length === 0}
+					disabled={selectedItems.length === 0 || isUpdating}
 					className="flex items-center justify-center rounded-lg border bg-blue-500 text-white transition hover:bg-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-300"
 				>
 					<div className="p-2">Mua hàng</div>
