@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import { FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
 import Search from "../../components/Search";
+import {
+	adminInitialProducts,
+	productCategoryOptions,
+	productStatusOptions,
+} from "../../data/products";
 import ModalCapNhatSanPham from "../../modals/ModalCapNhatSanPham";
 import ModalThemSanPham from "../../modals/ModalThemSanPham";
 
@@ -23,78 +28,12 @@ function generateNextProductId(products) {
 	return `SP${String(maxId + 1).padStart(3, "0")}`;
 }
 
-const initialProducts = [
-	{
-		id: "SP001",
-		name: "Doraemon tập 1",
-		category: "Truyện tranh",
-		price: 24000,
-		stock: 18,
-		status: "Còn hàng",
-		description: "Tập mở đầu của bộ truyện Doraemon quen thuộc.",
-		image: "https://picsum.photos/seed/doraemon/400/500",
-	},
-	{
-		id: "SP002",
-		name: "Thám tử lừng danh Conan tập 12",
-		category: "Truyện tranh",
-		price: 28000,
-		stock: 12,
-		status: "Còn hàng",
-		description: "Một vụ án mới cùng những manh mối đầy bất ngờ.",
-		image: "https://picsum.photos/seed/conan/400/500",
-	},
-	{
-		id: "SP003",
-		name: "Combo Harry Potter 7 tập",
-		category: "Combo",
-		price: 890000,
-		stock: 4,
-		status: "Còn hàng",
-		description: "Trọn bộ tiểu thuyết kinh điển dành cho người yêu phép thuật.",
-		image: "https://picsum.photos/seed/harrypotter/400/500",
-	},
-	{
-		id: "SP004",
-		name: "Nhà giả kim",
-		category: "Truyện chữ",
-		price: 86000,
-		stock: 0,
-		status: "Hết hàng",
-		description: "Tác phẩm nổi tiếng của Paulo Coelho.",
-		image: "https://picsum.photos/seed/nhagiakim/400/500",
-	},
-	{
-		id: "SP005",
-		name: "Tuổi trẻ đáng giá bao nhiêu",
-		category: "Truyện chữ",
-		price: 78000,
-		stock: 0,
-		status: "Hết hàng",
-		description: "Cuốn sách truyền cảm hứng cho người trẻ.",
-		image: "https://picsum.photos/seed/tuoitre/400/500",
-	},
-	{
-		id: "SP006",
-		name: "Combo Sherlock Holmes",
-		category: "Combo",
-		price: 420000,
-		stock: 7,
-		status: "Còn hàng",
-		description: "Bộ sưu tập các vụ án kinh điển của Sherlock Holmes.",
-		image: "https://picsum.photos/seed/sherlock/400/500",
-	},
-].map(syncProductStatus);
-
-const categoryOptions = ["Tất cả thể loại", "Truyện chữ", "Truyện tranh", "Combo"];
-const statusOptions = ["Tất cả trạng thái", "Còn hàng", "Hết hàng"];
-
 function formatCurrency(value) {
 	return `${value.toLocaleString("vi-VN")} đ`;
 }
 
 function QuanLySanPham() {
-	const [products, setProducts] = useState(initialProducts);
+	const [products, setProducts] = useState(adminInitialProducts.map(syncProductStatus));
 	const [searchValue, setSearchValue] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("Tất cả thể loại");
 	const [selectedStatus, setSelectedStatus] = useState("Tất cả trạng thái");
@@ -202,7 +141,7 @@ function QuanLySanPham() {
 								onChange={(e) => setSelectedCategory(e.target.value)}
 								className="h-11 rounded-full border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
 							>
-								{categoryOptions.map((option) => (
+								{productCategoryOptions.map((option) => (
 									<option key={option} value={option}>
 										{option}
 									</option>
@@ -214,7 +153,7 @@ function QuanLySanPham() {
 								onChange={(e) => setSelectedStatus(e.target.value)}
 								className="h-11 rounded-full border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
 							>
-								{statusOptions.map((option) => (
+								{productStatusOptions.map((option) => (
 									<option key={option} value={option}>
 										{option}
 									</option>

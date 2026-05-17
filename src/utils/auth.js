@@ -1,12 +1,7 @@
 import { getStoredUserProfile } from "./userProfile";
+import { adminMockAccount, userMockPassword } from "../data/auth";
 
 const AUTH_STORAGE_KEY = "shop-truyen-auth-session";
-const USER_PASSWORD = "123456";
-const ADMIN_ACCOUNT = {
-	email: "admin@shoptruyen.com",
-	password: "admin123",
-	role: "admin",
-};
 
 export function getLoginCredentials() {
 	const profile = getStoredUserProfile();
@@ -14,10 +9,10 @@ export function getLoginCredentials() {
 	return {
 		user: {
 			email: profile.email,
-			password: USER_PASSWORD,
+			password: userMockPassword,
 			role: "user",
 		},
-		admin: ADMIN_ACCOUNT,
+		admin: adminMockAccount,
 	};
 }
 

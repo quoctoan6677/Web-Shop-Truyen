@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FiX } from "react-icons/fi";
 import ProductCard from "../components/ProductCard";
+import { storefrontProducts } from "../data/products";
 import ModalChiTietSanPham from "../modals/ModalChiTietSanPham";
 import ModalMuaNgay from "../modals/ModalMuaNgay";
 
@@ -68,59 +69,6 @@ function getSearchScore(product, normalizedQuery) {
 	return 0;
 }
 
-const products = [
-	{
-		id: 1,
-		name: "Doraemon tập 1",
-		price: 24000,
-		category: "Truyện tranh",
-		image:
-			"https://cdn2.fptshop.com.vn/unsafe/Uploads/images/tin-tuc/157765/Originals/15(1).jpg",
-		description:
-			"Bộ truyện tranh thiếu nhi kinh điển về chú mèo máy Doraemon và nhóm bạn Nobita.",
-	},
-	{
-		id: 2,
-		name: "Conan tiểu thuyết bí ẩn",
-		price: 120000,
-		category: "Truyện chữ",
-		image:
-			"https://i.pinimg.com/736x/b7/86/ff/b786ffa545f7c01196c5ba83aa092e8f.jpg",
-		description:
-			"Tiểu thuyết trinh thám dành cho người yêu suy luận và phá án.",
-	},
-	{
-		id: 3,
-		name: "One Piece tập 105",
-		price: 32000,
-		category: "Truyện tranh",
-		image:
-			"https://i.pinimg.com/736x/b7/86/ff/b786ffa545f7c01196c5ba83aa092e8f.jpg",
-		description:
-			"Manga phiêu lưu nổi tiếng với hành trình của băng Mũ Rơm.",
-	},
-	{
-		id: 4,
-		name: "Combo Harry Potter 7 tập",
-		price: 890000,
-		category: "Combo",
-		image:
-			"https://i.pinimg.com/736x/b7/86/ff/b786ffa545f7c01196c5ba83aa092e8f.jpg",
-		description:
-			"Trọn bộ tiểu thuyết giả tưởng kinh điển dành cho người sưu tầm.",
-	},
-	...Array.from({ length: 12 }, (_, i) => ({
-		id: i + 5,
-		name: "Quần jean 11233333322222222222222222222222222 " + (i + 1),
-		price: 350000,
-		category: i % 3 === 0 ? "Truyện chữ" : i % 3 === 1 ? "Truyện tranh" : "Combo",
-		image:
-			"https://i.pinimg.com/736x/b7/86/ff/b786ffa545f7c01196c5ba83aa092e8f.jpg",
-		description:
-			"Truyện minh họa bản sưu tầm với nội dung phiêu lưu, hành động và hình ảnh bắt mắt.",
-	})),
-];
-
 function Home() {
 	const [cart, setCart] = useState([]);
 	const [currentPage, setCurrentPage] = useState(1);
@@ -161,8 +109,10 @@ function Home() {
 	const filteredProducts = useMemo(() => {
 		const categoryMatchedProducts =
 			activeCategory === "Tất cả"
-				? products
-				: products.filter((product) => product.category === activeCategory);
+				? storefrontProducts
+				: storefrontProducts.filter(
+						(product) => product.category === activeCategory
+					);
 
 		if (!normalizedSearchQuery) {
 			return categoryMatchedProducts;

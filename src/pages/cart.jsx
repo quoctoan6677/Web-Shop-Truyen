@@ -1,91 +1,10 @@
 import { useMemo, useState } from "react";
 import CartCard from "../components/CartCard";
+import { initialCartItems } from "../data/products";
 import ModalMuaNgay from "../modals/ModalMuaNgay";
 
 function Cart() {
-	const [cart, setCart] = useState([
-		{
-			id: 1,
-			name: "Doraemon tập 1",
-			price: 24000,
-			image:
-				"https://product.hstatic.net/1000376556/product/xhljijuw_9de22abba6a2407d87e202d773acda07_1024x1024.png",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 2,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 3,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 4,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 5,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 6,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 7,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 8,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 9,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-		{
-			id: 10,
-			name: "Quần jean 1",
-			price: 350000,
-			image: "https://cdn-media.sforum.vn/storage/app/media/anh-dep-82.jpg",
-			quantity: 1,
-			selected: false,
-		},
-	]);
+	const [cart, setCart] = useState(initialCartItems);
 	const [openBuyNowModal, setOpenBuyNowModal] = useState(false);
 
 	const allSelected = cart.length > 0 && cart.every((item) => item.selected);

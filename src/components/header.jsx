@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
 	FiBookOpen,
 	FiLogOut,
+	FiShoppingBag,
 	FiShoppingCart,
 	FiUser,
 } from "react-icons/fi";
@@ -20,7 +21,7 @@ function Header() {
 	const profileMenuRef = useRef(null);
 	const userProfile = useMemo(() => getStoredUserProfile(), []);
 	const isLoggedIn = isAuthenticated();
-	const activeItem = searchParams.get("category") || "Tất cả";
+	const activeItem = searchParams.get("category") || "Táº¥t cáº£";
 	const avatarLabel =
 		userProfile.fullName
 			?.trim()
@@ -91,7 +92,7 @@ function Header() {
 
 	const handleCategorySelect = (category) => {
 		updateHomeSearchParams((nextSearchParams) => {
-			if (category === "Tất cả") {
+			if (category === "Táº¥t cáº£") {
 				nextSearchParams.delete("category");
 			} else {
 				nextSearchParams.set("category", category);
@@ -129,7 +130,7 @@ function Header() {
 						type="button"
 						className="ml-4 flex h-11 w-11 self-start items-center cursor-pointer justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:bg-slate-50 max-md:mr-0 max-md:justify-self-end max-md:[grid-area:cart]"
 						onClick={() => navigate("/cart")}
-						aria-label="Giỏ hàng"
+						aria-label="Gio hang"
 					>
 						<FiShoppingCart className="h-5 w-5" aria-hidden="true" />
 					</button>
@@ -144,7 +145,7 @@ function Header() {
 							type="button"
 							className="flex h-13 items-center gap-2 rounded-full border border-slate-300 bg-blue-900 px-3 font-semibold text-white transition hover:bg-blue-700 cursor-pointer"
 							onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-							aria-label="Hồ sơ"
+							aria-label="Ho so"
 						>
 							<span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-sm">
 								{avatarLabel}
@@ -168,6 +169,14 @@ function Header() {
 								>
 									<FiShoppingCart className="h-4 w-4 text-slate-500" />
 									<span>Giỏ hàng</span>
+								</button>
+								<button
+									type="button"
+									onClick={() => handleNavigate("/order")}
+									className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 cursor-pointer"
+								>
+									<FiShoppingBag className="h-4 w-4 text-slate-500" />
+									<span>Đơn hàng</span>
 								</button>
 								<button
 									type="button"

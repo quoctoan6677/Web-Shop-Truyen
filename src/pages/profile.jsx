@@ -14,27 +14,6 @@ import {
 	saveUserProfile,
 } from "../utils/userProfile";
 
-const orderHistory = [
-	{
-		id: "DH001",
-		date: "14/05/2026",
-		total: 184000,
-		status: "Đã giao",
-	},
-	{
-		id: "DH002",
-		date: "09/05/2026",
-		total: 96000,
-		status: "Đang vận chuyển",
-	},
-	{
-		id: "DH003",
-		date: "02/05/2026",
-		total: 245000,
-		status: "Đã thanh toán",
-	},
-];
-
 function Profile() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [isSaved, setIsSaved] = useState(false);
@@ -69,8 +48,8 @@ function Profile() {
 								{profile.fullName}
 							</h1>
 							<p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-								Quản lý thông tin cá nhân, theo dõi đơn hàng gần đây và cập nhật
-								chi tiết liên hệ để việc mua truyện thuận tiện hơn.
+								Quản lý thông tin cá nhân và cập nhật chi tiết liên hệ để việc mua
+								truyện thuận tiện hơn.
 							</p>
 						</div>
 					</div>
@@ -192,38 +171,6 @@ function Profile() {
 					</button>
 				</div>
 			</form>
-
-			<div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-				<h2 className="text-xl font-bold text-slate-900">Đơn hàng gần đây</h2>
-				<p className="mt-1 text-sm text-slate-500">
-					Theo dõi nhanh trạng thái những đơn mới nhất.
-				</p>
-
-				<div className="mt-4 grid gap-3">
-					{orderHistory.map((order) => (
-						<div
-							key={`${order.id}-${order.date}`}
-							className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
-						>
-							<div className="flex items-start justify-between gap-3">
-								<div>
-									<p className="font-semibold text-slate-900">{order.id}</p>
-									<p className="mt-1 text-sm text-slate-500">{order.date}</p>
-								</div>
-								<span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700">
-									{order.status}
-								</span>
-							</div>
-							<p className="mt-3 text-sm text-slate-600">
-								Tổng thanh toán:{" "}
-								<span className="font-semibold text-red-500">
-									{order.total.toLocaleString()} đ
-								</span>
-							</p>
-						</div>
-					))}
-				</div>
-			</div>
 		</section>
 	);
 }

@@ -5,6 +5,7 @@ import UserLayout from "./layouts/userLayout";
 import AdminLayout from "./layouts/adminLayout";
 import Home from "./pages/home";
 import Cart from "./pages/cart";
+import Order from "./pages/order";
 import Profile from "./pages/profile";
 import Login from "./pages/auth/login";
 import Register from "./pages/auth/register";
@@ -48,6 +49,7 @@ function App() {
 					>
 						<Route index element={<Home />} />
 						<Route path="cart" element={<Cart />} />
+						<Route path="order" element={<Order />} />
 						<Route path="profile" element={<Profile />} />
 					</Route>
 

@@ -1,139 +1,11 @@
 import { useMemo, useState } from "react";
 import Search from "../../components/Search";
+import {
+	adminInitialOrders,
+	adminOrderStatusOptions,
+	adminOrderStatusOrder,
+} from "../../data/orders";
 import ModalChiTietDonHang from "../../modals/ModalChiTietDonHang";
-
-const initialOrders = [
-	{
-		id: "DH001",
-		customerName: "Phạm Quốc Toản",
-		phone: "0328 322 623",
-		address: "Bắc Từ Liêm, Hà Nội",
-		total: 184000,
-		status: "Đã giao",
-		orderDate: "17/05/2026",
-		items: [
-			{ id: "SP001", name: "Doraemon tập 1", price: 24000, quantity: 2 },
-			{ id: "SP004", name: "Nhà giả kim", price: 68000, quantity: 2 },
-		],
-	},
-	{
-		id: "DH002",
-		customerName: "Nguyễn Minh Anh",
-		phone: "0903 456 789",
-		address: "Thanh Xuân, Hà Nội",
-		total: 96000,
-		status: "Đang giao hàng",
-		orderDate: "16/05/2026",
-		items: [
-			{
-				id: "SP002",
-				name: "Thám tử lừng danh Conan tập 12",
-				price: 28000,
-				quantity: 1,
-			},
-			{
-				id: "SP005",
-				name: "Tuổi trẻ đáng giá bao nhiêu",
-				price: 68000,
-				quantity: 1,
-			},
-		],
-	},
-	{
-		id: "DH003",
-		customerName: "Trần Thu Hà",
-		phone: "0987 654 321",
-		address: "Hải Châu, Đà Nẵng",
-		total: 1216000,
-		status: "Chờ xác nhận",
-		orderDate: "16/05/2026",
-		items: [
-			{
-				id: "SP006",
-				name: "Combo Sherlock Holmes",
-				price: 350000,
-				quantity: 1,
-			},
-			{
-				id: "SP001",
-				name: "Doraemon tập 1",
-				price: 24000,
-				quantity: 2,
-			},
-			{
-				id: "SP002",
-				name: "Thám tử lừng danh Conan tập 12",
-				price: 28000,
-				quantity: 3,
-			},
-			{
-				id: "SP003",
-				name: "Combo Harry Potter 7 tập",
-				price: 890000,
-				quantity: 1,
-			},
-			{
-				id: "SP004",
-				name: "Nhà giả kim",
-				price: 86000,
-				quantity: 1,
-			},
-			{
-				id: "SP005",
-				name: "Tuổi trẻ đáng giá bao nhiêu",
-				price: 78000,
-				quantity: 2,
-			},
-		],
-	},
-	{
-		id: "DH004",
-		customerName: "Lê Hoàng Nam",
-		phone: "0912 888 999",
-		address: "Ninh Kiều, Cần Thơ",
-		total: 420000,
-		status: "Đang giao hàng",
-		orderDate: "15/05/2026",
-		items: [
-			{
-				id: "SP006",
-				name: "Combo Sherlock Holmes",
-				price: 420000,
-				quantity: 1,
-			},
-		],
-	},
-	{
-		id: "DH005",
-		customerName: "Vũ Khánh Linh",
-		phone: "0868 123 456",
-		address: "Biên Hòa, Đồng Nai",
-		total: 78000,
-		status: "Đã giao",
-		orderDate: "15/05/2026",
-		items: [
-			{
-				id: "SP005",
-				name: "Tuổi trẻ đáng giá bao nhiêu",
-				price: 78000,
-				quantity: 1,
-			},
-		],
-	},
-];
-
-const statusOptions = [
-	"Tất cả trạng thái",
-	"Chờ xác nhận",
-	"Đang giao hàng",
-	"Đã giao",
-];
-
-const statusOrder = {
-	"Chờ xác nhận": 0,
-	"Đang giao hàng": 1,
-	"Đã giao": 2,
-};
 
 function formatCurrency(value) {
 	return `${value.toLocaleString("vi-VN")} đ`;
@@ -152,7 +24,7 @@ function getStatusClass(status) {
 }
 
 function QuanLyDonHang() {
-	const [orders, setOrders] = useState(initialOrders);
+	const [orders, setOrders] = useState(adminInitialOrders);
 	const [searchValue, setSearchValue] = useState("");
 	const [selectedStatus, setSelectedStatus] = useState("Tất cả trạng thái");
 	const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -175,7 +47,9 @@ function QuanLyDonHang() {
 
 				return matchesSearch && matchesStatus;
 			})
-			.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+			.sort(
+				(a, b) => adminOrderStatusOrder[a.status] - adminOrderStatusOrder[b.status]
+			);
 	}, [orders, searchValue, selectedStatus]);
 
 	const selectedOrder = useMemo(
@@ -226,7 +100,7 @@ function QuanLyDonHang() {
 								onChange={(e) => setSelectedStatus(e.target.value)}
 								className="h-11 rounded-full border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
 							>
-								{statusOptions.map((option) => (
+								{adminOrderStatusOptions.map((option) => (
 									<option key={option} value={option}>
 										{option}
 									</option>
